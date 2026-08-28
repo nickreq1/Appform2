@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { deleteDemoApplication, getDemoApplication, updateDemoApplication } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -7,6 +9,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+
+  if (isDemoModeEnabled()) {
+    const application = getDemoApplication(payload, id);
+    if (application === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!application) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ application });
+  }
 
   const application = await prisma.application.findUnique({
     where: { id },
@@ -32,6 +41,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const body = await req.json();
   const { submit, ...data } = body;
+
+  if (isDemoModeEnabled()) {
+    const application = updateDemoApplication(payload, id, { ...data, submit });
+    if (application === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!application) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ application });
+  }
 
   const existing = await prisma.application.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -64,6 +80,14 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
+
+  if (isDemoModeEnabled()) {
+    const result = deleteDemoApplication(payload, id);
+    if (result === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (result === null) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (typeof result === "string") return NextResponse.json({ error: result }, { status: 400 });
+    return NextResponse.json({ success: true });
+  }
 
   const existing = await prisma.application.findUnique({ where: { id } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });

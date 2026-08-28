@@ -44,6 +44,18 @@ A complete loan application portal for brokers and borrowers, built with Next.js
 
 5. **Open** [http://localhost:3000](http://localhost:3000)
 
+### Local demo mode (no database required)
+
+If you just want to click through the portal locally, run the app without `DATABASE_URL` and use the demo access buttons on `/auth/login`.
+
+```bash
+cd loan-portal
+npm install
+npm run dev
+```
+
+Demo mode is enabled automatically in non-production when no database is configured. It provides local-only demo borrower, broker, and admin access so you can test the portal without creating accounts or setting up PostgreSQL first.
+
 ## Environment Variables
 
 | Variable | Description |
@@ -52,6 +64,7 @@ A complete loan application portal for brokers and borrowers, built with Next.js
 | `JWT_SECRET` | Secret key for JWT signing (use a long random string) |
 | `NEXT_PUBLIC_APP_URL` | Application URL |
 | `UPLOAD_DIR` | Directory for file uploads (default: `./uploads`) |
+| `DEMO_MODE` | Optional override for local demo mode (`true` or `false`) |
 
 ## Production Deployment
 

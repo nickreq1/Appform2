@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { addDemoFile } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
@@ -31,6 +33,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
     return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
+  }
+
+  if (isDemoModeEnabled()) {
+    const dbFile = addDemoFile(payload, id, file);
+    if (dbFile === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!dbFile) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ file: dbFile }, { status: 201 });
   }
 
   const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");

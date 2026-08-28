@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { updateDemoApplicationStatus, type DemoStatus } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -15,6 +17,13 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const validStatuses = ["DRAFT", "SUBMITTED", "UNDER_REVIEW", "APPROVED", "DECLINED", "MORE_INFO_NEEDED"];
   if (!validStatuses.includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  if (isDemoModeEnabled()) {
+    const application = updateDemoApplicationStatus(payload, id, status as DemoStatus, note || null);
+    if (application === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!application) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ application });
   }
 
   const application = await prisma.application.update({
