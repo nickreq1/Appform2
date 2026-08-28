@@ -1,6 +1,6 @@
 # Equity One Loan Portal
 
-A complete loan application portal for brokers and borrowers, built with Next.js 14, TypeScript, Tailwind CSS, and PostgreSQL.
+A complete loan application portal for brokers and borrowers, built with Next.js 16, TypeScript, Tailwind CSS, and PostgreSQL.
 
 ## Features
 
@@ -52,6 +52,35 @@ A complete loan application portal for brokers and borrowers, built with Next.js
 | `JWT_SECRET` | Secret key for JWT signing (use a long random string) |
 | `NEXT_PUBLIC_APP_URL` | Application URL |
 | `UPLOAD_DIR` | Directory for file uploads (default: `./uploads`) |
+
+## Production Deployment
+
+### Vercel
+
+This repository keeps the Next.js app in the `loan-portal/` subdirectory.
+
+1. Import the `nickreq1/Appform2` repository into Vercel.
+2. Set the **Root Directory** to `loan-portal`.
+3. Configure the required environment variables from `.env.example`.
+4. Provision a PostgreSQL database and set `DATABASE_URL`.
+5. Run Prisma migrations in production with:
+   ```bash
+   npx prisma migrate deploy
+   ```
+
+### Root-level npm commands
+
+If your hosting platform builds from the repository root, you can use the root scripts that proxy to `loan-portal`:
+
+```bash
+npm install
+npm run build
+npm run start
+```
+
+### File uploads on serverless hosting
+
+The current upload implementation writes files to the local filesystem. That works for local development and for hosts that provide persistent disk storage via `UPLOAD_DIR`, but serverless platforms such as Vercel do not provide durable local storage. For a production Vercel deployment, wire uploads to an external object store before relying on persisted uploaded files.
 
 ## User Roles
 

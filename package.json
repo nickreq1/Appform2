@@ -1,0 +1,12 @@
+{
+  "name": "appform2",
+  "private": true,
+  "scripts": {
+    "install:loan-portal": "npm install --prefix loan-portal",
+    "dev": "npm --prefix loan-portal run dev",
+    "build": "npm --prefix loan-portal run build",
+    "start": "npm --prefix loan-portal run start",
+    "lint": "npm --prefix loan-portal run lint",
+    "postinstall": "npm run install:loan-portal"
+  }
+}
