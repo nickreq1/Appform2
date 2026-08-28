@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  BORROWER
+  BROKER
+  ADMIN
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  DECLINED
+  MORE_INFO_NEEDED
+}
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  role         Role          @default(BORROWER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  applications Application[]
+}
+
+model Application {
+  id        String            @id @default(uuid())
+  userId    String
+  user      User              @relation(fields: [userId], references: [id])
+  status    ApplicationStatus @default(DRAFT)
+
+  // Borrower personal info
+  borrowerFirstName  String
+  borrowerLastName   String
+  borrowerEmail      String
+  borrowerPhone      String
+  borrowerDOB        String?
+  borrowerAddress    String?
+  borrowerCity       String?
+  borrowerState      String?
+  borrowerPostcode   String?
+
+  // Employment
+  employmentStatus   String?
+  employerName       String?
+  jobTitle           String?
+  yearsEmployed      Float?
+  annualIncome       Float?
+
+  // Loan details
+  loanPurpose        String?
+  loanAmount         Float?
+  loanTerm           Int?
+  interestType       String?
+
+  // Property
+  propertyAddress    String?
+  propertyCity       String?
+  propertyState      String?
+  propertyPostcode   String?
+  propertyValue      Float?
+  propertyType       String?
+
+  // Assets & Liabilities
+  savingsAmount      Float?
+  otherAssets        String?
+  existingDebts      String?
+  monthlyExpenses    Float?
+
+  // Additional notes
+  additionalNotes    String?
+
+  // Metadata
+  submittedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  files              ApplicationFile[]
+  statusHistory      StatusHistory[]
+}
+
+model ApplicationFile {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  fileName      String
+  fileType      String
+  fileSize      Int
+  storagePath   String
+  uploadedAt    DateTime    @default(now())
+}
+
+model StatusHistory {
+  id            String            @id @default(uuid())
+  applicationId String
+  application   Application       @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus
+  note          String?
+  changedAt     DateTime          @default(now())
+}
