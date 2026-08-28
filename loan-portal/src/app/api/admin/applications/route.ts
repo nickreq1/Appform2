@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { listDemoApplicationsForAdmin } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -14,6 +16,10 @@ export async function GET(req: NextRequest) {
   const status = searchParams.get("status");
   const search = searchParams.get("search");
   const skip = (page - 1) * limit;
+
+  if (isDemoModeEnabled()) {
+    return NextResponse.json(listDemoApplicationsForAdmin(page, limit, status, search));
+  }
 
   const where: Record<string, unknown> = {};
   if (status) where.status = status;

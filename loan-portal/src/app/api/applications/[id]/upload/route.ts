@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { addDemoFile } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { writeFile, mkdir } from "fs/promises";
@@ -33,12 +35,20 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "File too large (max 10MB)" }, { status: 400 });
   }
 
-  const uploadDir = path.join(process.cwd(), "uploads", id);
+  if (isDemoModeEnabled()) {
+    const dbFile = addDemoFile(payload, id, file);
+    if (dbFile === false) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!dbFile) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ file: dbFile }, { status: 201 });
+  }
+
+  const uploadRoot = process.env.UPLOAD_DIR || path.join(process.cwd(), "uploads");
+  const uploadDir = path.join(/* turbopackIgnore: true */ uploadRoot, id);
   await mkdir(uploadDir, { recursive: true });
 
   const ext = path.extname(file.name);
   const fileName = `${uuidv4()}${ext}`;
-  const filePath = path.join(uploadDir, fileName);
+  const filePath = path.join(/* turbopackIgnore: true */ uploadDir, fileName);
 
   const bytes = await file.arrayBuffer();
   await writeFile(filePath, Buffer.from(bytes));
@@ -49,7 +59,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       fileName: file.name,
       fileType: file.type,
       fileSize: file.size,
-      storagePath: path.join("uploads", id, fileName),
+      storagePath: filePath,
     },
   });
 

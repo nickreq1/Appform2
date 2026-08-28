@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { prisma } from "@/lib/prisma";
 import { hashPassword, signToken } from "@/lib/auth";
 import { z } from "zod";
@@ -14,6 +15,13 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    if (isDemoModeEnabled()) {
+      return NextResponse.json(
+        { error: "Local demo mode is enabled. Use the demo access buttons on the login page." },
+        { status: 400 }
+      );
+    }
+
     const body = await req.json();
     const data = schema.parse(body);
 

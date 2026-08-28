@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { listDemoApplicationsForExport } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -13,11 +15,13 @@ export async function GET(req: NextRequest) {
   const where: Record<string, unknown> = {};
   if (status) where.status = status;
 
-  const applications = await prisma.application.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    include: { user: { select: { email: true, role: true } } },
-  });
+  const applications = isDemoModeEnabled()
+    ? listDemoApplicationsForExport(status)
+    : await prisma.application.findMany({
+        where,
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { email: true, role: true } } },
+      });
 
   const headers = [
     "ID", "Status", "Borrower Name", "Borrower Email", "Loan Amount", "Loan Purpose",

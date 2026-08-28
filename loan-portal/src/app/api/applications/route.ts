@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
+import { createDemoApplication, listDemoApplicationsForDashboard } from "@/lib/demo-store";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -10,6 +12,10 @@ export async function GET(req: NextRequest) {
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "10");
   const skip = (page - 1) * limit;
+
+  if (isDemoModeEnabled()) {
+    return NextResponse.json(listDemoApplicationsForDashboard(payload, page, limit));
+  }
 
   const where = payload.role === "ADMIN" ? {} : { userId: payload.userId };
 
@@ -33,6 +39,11 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
   const { submit, ...data } = body;
+
+  if (isDemoModeEnabled()) {
+    const application = createDemoApplication(payload, { ...data, submit });
+    return NextResponse.json({ application }, { status: 201 });
+  }
 
   const application = await prisma.application.create({
     data: {

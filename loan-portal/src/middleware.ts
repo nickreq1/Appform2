@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/auth";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
 
 const publicPaths = ["/", "/auth/login", "/auth/register", "/api/auth/login", "/api/auth/register"];
 
 export function middleware(request: NextRequest) {
+  if (isDemoModeEnabled()) {
+    return NextResponse.next();
+  }
+
   const { pathname } = request.nextUrl;
 
   const isPublic = publicPaths.some((p) => pathname === p || pathname.startsWith("/api/auth/"));

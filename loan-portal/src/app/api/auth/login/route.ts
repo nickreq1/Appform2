@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isDemoModeEnabled } from "@/lib/demo-mode";
 import { prisma } from "@/lib/prisma";
 import { comparePassword, signToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
+    if (isDemoModeEnabled()) {
+      return NextResponse.json(
+        { error: "Local demo mode is enabled. Use the demo access buttons on the login page." },
+        { status: 400 }
+      );
+    }
+
     const { email, password } = await req.json();
 
     if (!email || !password) {
